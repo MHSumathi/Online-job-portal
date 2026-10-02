@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.title }} at {{ job.company_name }} - Online Job Portal{% endblock %}
+
+{% block content %}
+<!-- Header Bar -->
+<div class="bg-white border-bottom py-4 mb-4">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb mb-2 small">
+        <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-decoration-none">Home</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('job_search') }}" class="text-decoration-none">Jobs</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('job_search', category=job.category_id) }}" class="text-decoration-none">{{ job.category_name }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ job.title }}</li>
+      </ol>
+    </nav>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div class="d-flex gap-3 align-items-center">
+        <div class="company-logo-box" style="width: 64px; height: 64px; font-size: 1.5rem;">
+          {{ job.company_name[:2] | upper }}
+        </div>
+        <div>
+          <h2 class="fw-bold mb-1">{{ job.title }}</h2>
+          <div class="text-muted fw-medium d-flex flex-wrap align-items-center gap-2">
+            <a href="{{ url_for('company_profile', employer_id=job.employer_id) }}" class="text-primary text-decoration-none fw-semibold">
+              <i class="bi bi-building me-1"></i>{{ job.company_name }}
+            </a>
+            <span>&bull;</span>
+            <span><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</span>
+            <span>&bull;</span>
+            <span><i class="bi bi-clock me-1"></i>Posted {{ job.created_at[:10] }}</span>
+            <span>&bull;</span>
+            <span class="text-muted"><i class="bi bi-eye me-1"></i>{{ job.views_count }} views</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 align-items-center">
+        {% if current_user and current_user.role == 'seeker' %}
+          <button class="btn btn-outline-custom btn-save-job d-flex align-items-center gap-2" data-job-id="{{ job.id }}">
+            <i class="bi {% if is_saved %}bi-bookmark-fill text-primary{% else %}bi-bookmark{% endif %}"></i>
+            <span class="save-text">{% if is_saved %}Saved{% else %}Save Job{% endif %}</span>
+          </button>
+        {% endif %}
+        <button class="btn btn-outline-custom btn-copy-link" title="Copy Link">
+          <i class="bi bi-share"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <!-- Application Status Notice if applied -->
+  {% if has_applied %}
+  <div class="alert alert-info border-0 shadow-sm d-flex align-items-center justify-content-between p-3 rounded-4 mb-4">
+    <div class="d-flex align-items-center gap-3">
+      <div class="stat-icon info p-2" style="width: 42px; height: 42px;">
+        <i class="bi bi-file-earmark-check-fill fs-4"></i>
+      </div>
+      <div>
+        <h6 class="fw-bold mb-0">Application Submitted</h6>
+        <p class="mb-0 small text-muted">You applied for this role on {{ existing_application.applied_at[:10] }}. Current status:</p>
+      </div>
+    </div>
+    <div>
+      <span class="badge-status 
+        {% if existing_application.status == 'Pending' %}badge-status-pending
+        {% elif existing_application.status == 'Under Review' %}badge-status-review
+        {% elif existing_application.status == 'Shortlisted' %}badge-status-shortlisted
+        {% elif existing_application.status == 'Accepted' %}badge-status-accepted
+        {% else %}badge-status-rejected{% endif %} fs-6 px-3 py-2">
+        <i class="bi bi-clock me-1"></i>{{ existing_application.status }}
+      </span>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- Left Column: Detailed Job Information -->
+    <div class="col-lg-8">
+      <div class="bg-white p-4 p-md-5 rounded-4 border shadow-sm mb-4">
+        <h4 class="fw-bold mb-3 border-bottom pb-2">About The Opportunity</h4>
+        <p class="text-secondary leading-relaxed mb-4" style="white-space: pre-line;">{{ job.description }}</p>
+
+        {% if job.responsibilities %}
+        <h5 class="fw-bold mt-4 mb-3 border-bottom pb-2"><i class="bi bi-check2-circle text-primary me-2"></i>Key Responsibilities</h5>
+        <div class="text-secondary mb-4" style="white-space: pre-line;">
+          {{ job.responsibilities }}
+        </div>
+        {% endif %}
+
+        {% if job.requirements %}
+        <h5 class="fw-bold mt-4 mb-3 border-bottom pb-2"><i class="bi bi-award text-primary me-2"></i>Required Qualifications & Skills</h5>
+        <div class="text-secondary mb-4" style="white-space: pre-line;">
+          {{ job.requirements }}
+        </div>
+        {% endif %}
+
+        {% if job.benefits %}
+        <h5 class="fw-bold mt-4 mb-3 border-bottom pb-2"><i class="bi bi-gift text-primary me-2"></i>Benefits & Perks</h5>
+        <div class="text-secondary mb-3" style="white-space: pre-line;">
+          {{ job.benefits }}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Similar Jobs -->
+      {% if similar_jobs %}
+      <div class="mt-5">
+        <h4 class="fw-bold mb-3">Similar Job Vacancies</h4>
+        <div class="d-flex flex-column gap-3">
+          {% for sim in similar_jobs %}
+          <div class="job-card bg-white p-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center gap-3">
+                <div class="company-logo-box" style="width: 44px; height: 44px; font-size: 1rem;">
+                  {{ sim.company_name[:2] | upper }}
+                </div>
+                <div>
+                  <h6 class="fw-bold mb-0">
+                    <a href="{{ url_for('job_detail', job_id=sim.id) }}" class="job-title-link">
+                      {{ sim.title }}
+                    </a>
+                  </h6>
+                  <div class="small text-muted">{{ sim.company_name }} &bull; {{ sim.location }}</div>
+                </div>
+              </div>
+              <a href="{{ url_for('job_detail', job_id=sim.id) }}" class="btn btn-sm btn-outline-custom">View</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right Column: Sidebar Specs & Apply Card -->
+    <div class="col-lg-4">
+      <div class="d-flex flex-column gap-4">
+        <!-- Apply Action Box -->
+        <div class="bg-white p-4 rounded-4 border shadow-sm">
+          <h5 class="fw-bold mb-3">Job Snapshot</h5>
+          
+          <div class="mb-4">
+            <div class="text-muted small">Compensation</div>
+            <div class="fs-4 fw-bold text-dark">
+              {% if job.salary_min and job.salary_max %}
+                {{ job.salary_currency }}{{ "{:,}".format(job.salary_min) }} - {{ job.salary_currency }}{{ "{:,}".format(job.salary_max) }}
+              {% elif job.salary_min %}
+                From {{ job.salary_currency }}{{ "{:,}".format(job.salary_min) }}
+              {% else %}
+                Competitive
+              {% endif %}
+              <span class="text-muted fs-6 fw-normal">/ year</span>
+            </div>
+          </div>
+
+          <div class="d-flex flex-column gap-3 mb-4 border-top border-bottom py-3">
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted small"><i class="bi bi-clock me-2 text-primary"></i>Job Type</span>
+              <span class="fw-semibold small">{{ job.job_type }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted small"><i class="bi bi-briefcase me-2 text-primary"></i>Experience</span>
+              <span class="fw-semibold small">{{ job.experience_level }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted small"><i class="bi bi-grid me-2 text-primary"></i>Category</span>
+              <span class="fw-semibold small">{{ job.category_name }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted small"><i class="bi bi-calendar-event me-2 text-primary"></i>Deadline</span>
+              <span class="fw-semibold small">{{ job.deadline or 'Open until filled' }}</span>
+            </div>
+          </div>
+
+          {% if current_user %}
+            {% if current_user.role == 'seeker' %}
+              {% if has_applied %}
+                <button class="btn btn-secondary w-100 py-3 rounded-3" disabled>
+                  <i class="bi bi-check-circle-fill me-2"></i>Application Submitted
+                </button>
+              {% else %}
+                <button type="button" class="btn btn-primary-custom w-100 py-3 fs-6" data-bs-toggle="modal" data-bs-target="#applyModal">
+                  <i class="bi bi-send-fill me-2"></i>Apply for this Role
+                </button>
+              {% endif %}
+            {% elif current_user.role == 'employer' %}
+              <div class="alert alert-secondary mb-0 small text-center">
+                You are logged in as an Employer. Candidates apply through their seeker profile.
+              </div>
+            {% else %}
+              <div class="alert alert-info mb-0 small text-center">
+                Logged in as Admin.
+              </div>
+            {% endif %}
+          {% else %}
+            <a href="{{ url_for('login', next=request.path) }}" class="btn btn-primary-custom w-100 py-3 text-center fs-6">
+              Sign In to Apply
+            </a>
+            <div class="text-center mt-2">
+              <span class="small text-muted">Don't have an account? <a href="{{ url_for('register') }}" class="text-decoration-none fw-semibold">Register</a></span>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Company Card -->
+        <div class="bg-white p-4 rounded-4 border shadow-sm">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="company-logo-box" style="width: 50px; height: 50px;">
+              {{ job.company_name[:2] | upper }}
+            </div>
+            <div>
+              <h6 class="fw-bold mb-0">{{ job.company_name }}</h6>
+              <div class="text-muted small">{{ job.industry or 'Technology' }}</div>
+            </div>
+          </div>
+
+          <p class="text-muted small mb-3 line-clamp-3" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+            {{ job.company_description or 'Leading organization committed to innovation and career development.' }}
+          </p>
+
+          <div class="d-flex flex-column gap-2 small text-muted mb-3 border-top pt-3">
+            <div><i class="bi bi-geo-alt me-2 text-primary"></i>{{ job.company_location or job.location }}</div>
+            {% if job.company_size %}
+            <div><i class="bi bi-people me-2 text-primary"></i>{{ job.company_size }}</div>
+            {% endif %}
+            {% if job.company_website %}
+            <div><i class="bi bi-globe me-2 text-primary"></i><a href="{{ job.company_website }}" target="_blank" class="text-decoration-none">{{ job.company_website }}</a></div>
+            {% endif %}
+          </div>
+
+          <a href="{{ url_for('company_profile', employer_id=job.employer_id) }}" class="btn btn-outline-custom w-100 text-center">
+            View Company Profile
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Apply Modal for Candidate -->
+{% if current_user and current_user.role == 'seeker' and not has_applied %}
+<div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-bottom p-4">
+        <div>
+          <h5 class="modal-title fw-bold" id="applyModalLabel">Submit Application</h5>
+          <div class="text-muted small">Applying for <strong>{{ job.title }}</strong> at <strong>{{ job.company_name }}</strong></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form action="{{ url_for('apply_job', job_id=job.id) }}" method="POST" enctype="multipart/form-data">
+        <div class="modal-body p-4">
+          <!-- Candidate info summary -->
+          <div class="p-3 bg-light rounded-3 mb-4 d-flex align-items-center justify-content-between">
+            <div>
+              <div class="fw-bold">{{ current_user.name }}</div>
+              <div class="small text-muted">{{ current_user.email }} &bull; {{ current_user.phone or 'No phone set' }}</div>
+            </div>
+            <a href="{{ url_for('seeker_profile') }}" class="small text-decoration-none fw-semibold">Edit Info</a>
+          </div>
+
+          <!-- Resume Attachment -->
+          <div class="mb-4">
+            <label class="form-label fw-bold">Resume Document <span class="text-danger">*</span></label>
+            {% if seeker_profile and seeker_profile.resume_filename %}
+            <div class="p-3 border rounded-3 bg-white mb-2 d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-pdf-fill text-danger fs-4"></i>
+                <div>
+                  <div class="fw-semibold small">{{ seeker_profile.resume_filename }}</div>
+                  <div class="text-muted" style="font-size: 0.75rem;">Your current saved profile resume</div>
+                </div>
+              </div>
+              <span class="badge bg-success-subtle text-success border">Attached</span>
+            </div>
+            <div class="small text-muted mb-2">Or upload a newer resume for this specific application:</div>
+            {% endif %}
+
+            <input type="file" name="new_resume" class="form-control" accept=".pdf,.doc,.docx" {% if not seeker_profile or not seeker_profile.resume_filename %}required{% endif %}>
+            <div class="form-text small">Accepted formats: PDF, DOC, DOCX (Max 16 MB)</div>
+          </div>
+
+          <!-- Cover Letter -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Cover Letter / Pitch</label>
+            <textarea name="cover_letter" rows="5" class="form-control" placeholder="Introduce yourself, explain why you are an ideal fit for {{ job.company_name }}, and highlight your relevant achievements..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer border-top p-3 px-4">
+          <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-custom px-4">
+            <i class="bi bi-send-fill me-1"></i> Send Application
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

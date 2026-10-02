@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}{{ company.company_name }} - Company Profile & Jobs - Online Job Portal{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-5 mb-4">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-auto">
+        <div class="company-logo-box shadow-sm" style="width: 80px; height: 80px; font-size: 2rem;">
+          {{ company.company_name[:2] | upper }}
+        </div>
+      </div>
+      <div class="col">
+        <h2 class="fw-bold mb-1">{{ company.company_name }}</h2>
+        <div class="text-muted fw-medium d-flex flex-wrap align-items-center gap-3">
+          {% if company.industry %}
+            <span><i class="bi bi-tag text-primary me-1"></i>{{ company.industry }}</span>
+            <span>&bull;</span>
+          {% endif %}
+          <span><i class="bi bi-geo-alt text-primary me-1"></i>{{ company.company_location or 'Global' }}</span>
+          {% if company.company_size %}
+            <span>&bull;</span>
+            <span><i class="bi bi-people text-primary me-1"></i>{{ company.company_size }}</span>
+          {% endif %}
+          {% if company.founded_year %}
+            <span>&bull;</span>
+            <span><i class="bi bi-calendar-check text-primary me-1"></i>Founded {{ company.founded_year }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-lg-auto">
+        {% if company.company_website %}
+        <a href="{{ company.company_website }}" target="_blank" class="btn btn-outline-custom">
+          <i class="bi bi-globe me-1"></i> Visit Website
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row g-4">
+    <!-- Left Column: About & Overview -->
+    <div class="col-lg-4">
+      <div class="bg-white p-4 rounded-4 border shadow-sm mb-4">
+        <h5 class="fw-bold mb-3 border-bottom pb-2">About The Company</h5>
+        <p class="text-secondary small leading-relaxed" style="white-space: pre-line;">
+          {{ company.company_description or 'An innovative enterprise delivering industry-leading solutions.' }}
+        </p>
+
+        <div class="pt-3 border-top mt-3 small text-muted d-flex flex-column gap-2">
+          <div><i class="bi bi-envelope text-primary me-2"></i>{{ company.email }}</div>
+          {% if company.phone %}
+          <div><i class="bi bi-telephone text-primary me-2"></i>{{ company.phone }}</div>
+          {% endif %}
+          <div><i class="bi bi-calendar3 text-primary me-2"></i>Joined {{ company.joined_at[:10] }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Active Job Openings -->
+    <div class="col-lg-8">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold mb-0">Open Positions ({{ jobs|length }})</h4>
+        <span class="text-muted small">All active postings</span>
+      </div>
+
+      {% if jobs %}
+        <div class="d-flex flex-column gap-3">
+          {% for job in jobs %}
+          <div class="job-card bg-white">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+              <div>
+                <h5 class="fw-bold mb-1">
+                  <a href="{{ url_for('job_detail', job_id=job.id) }}" class="job-title-link">
+                    {{ job.title }}
+                  </a>
+                </h5>
+                <div class="text-muted small mb-2">
+                  <i class="bi bi-geo-alt me-1 text-primary"></i>{{ job.location }}
+                  <span class="mx-2">&bull;</span>
+                  <i class="bi bi-clock me-1"></i>Posted {{ job.created_at[:10] }}
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                  <span class="badge-job-type {% if job.job_type == 'Full-Time' %}badge-fulltime{% elif job.job_type == 'Remote' %}badge-remote{% else %}badge-parttime{% endif %}">
+                    {{ job.job_type }}
+                  </span>
+                  <span class="badge bg-light text-secondary border rounded-pill px-3 py-1 small">
+                    {{ job.experience_level }}
+                  </span>
+                  <span class="badge bg-light text-secondary border rounded-pill px-3 py-1 small">
+                    {{ job.category_name }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="text-md-end pt-2 pt-md-0">
+                <div class="fw-bold text-dark fs-6 mb-2">
+                  {% if job.salary_min and job.salary_max %}
+                    {{ job.salary_currency }}{{ "{:,}".format(job.salary_min) }} - {{ job.salary_currency }}{{ "{:,}".format(job.salary_max) }}
+                  {% elif job.salary_min %}
+                    From {{ job.salary_currency }}{{ "{:,}".format(job.salary_min) }}
+                  {% else %}
+                    Competitive
+                  {% endif %}
+                </div>
+                <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-sm btn-primary-custom px-3">
+                  Apply Now &rarr;
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="bg-white rounded-4 border p-5 text-center my-4">
+          <p class="text-muted small mb-0">There are currently no active job vacancies listed for this organization.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

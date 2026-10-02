@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Company Profile Settings - Online Job Portal{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1 small">
+            <li class="breadcrumb-item"><a href="{{ url_for('employer_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Company Profile</li>
+          </ol>
+        </nav>
+        <h2 class="fw-bold mb-0">Edit Company Information</h2>
+      </div>
+      <a href="{{ url_for('employer_dashboard') }}" class="btn btn-outline-custom">
+        <i class="bi bi-arrow-left me-1"></i> Dashboard
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+
+      <form action="{{ url_for('employer_profile') }}" method="POST" enctype="multipart/form-data">
+        
+        <!-- Company Core Info -->
+        <div class="bg-white p-4 p-md-5 rounded-4 border shadow-sm mb-4">
+          <h5 class="fw-bold mb-4 border-bottom pb-2"><i class="bi bi-buildings text-primary me-2"></i>Organization Profile</h5>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Company / Brand Name <span class="text-danger">*</span></label>
+            <input type="text" name="company_name" value="{{ profile.company_name or '' }}" class="form-control" required>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Industry / Domain</label>
+              <input type="text" name="industry" value="{{ profile.industry or '' }}" class="form-control" placeholder="e.g. Cloud Computing & AI">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Headquarters Location</label>
+              <input type="text" name="company_location" value="{{ profile.company_location or '' }}" class="form-control" placeholder="e.g. San Francisco, CA">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Company Size</label>
+              <select name="company_size" class="form-select">
+                {% for sz in ['1-10 Employees', '11-50 Employees', '51-200 Employees', '201-500 Employees', '500+ Employees'] %}
+                <option value="{{ sz }}" {% if profile.company_size == sz %}selected{% endif %}>{{ sz }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Founded Year</label>
+              <input type="number" name="founded_year" value="{{ profile.founded_year or '' }}" class="form-control" placeholder="e.g. 2018">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Contact Phone</label>
+              <input type="tel" name="phone" value="{{ user.phone or '' }}" class="form-control" placeholder="+1 (555) 000-0000">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Official Website</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><i class="bi bi-globe"></i></span>
+              <input type="url" name="company_website" value="{{ profile.company_website or '' }}" class="form-control" placeholder="https://company.example.com">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">About Company / Mission Statement</label>
+            <textarea name="company_description" rows="5" class="form-control" placeholder="Share your organization's mission, values, work culture, and why top talent should join your team...">{{ profile.company_description or '' }}</textarea>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label fw-semibold">Company Logo</label>
+            <input type="file" name="company_logo" class="form-control" accept="image/*">
+            <div class="form-text small">Accepted formats: PNG, JPG, WEBP, SVG. Max size: 5 MB.</div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3">
+          <a href="{{ url_for('employer_dashboard') }}" class="btn btn-outline-custom px-4 py-2">Cancel</a>
+          <button type="submit" class="btn btn-primary-custom px-5 py-3 fs-6">
+            <i class="bi bi-check-lg me-1"></i> Update Company Profile
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

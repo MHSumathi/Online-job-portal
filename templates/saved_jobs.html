@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Saved Jobs - Online Job Portal{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1 small">
+            <li class="breadcrumb-item"><a href="{{ url_for('seeker_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Saved Jobs</li>
+          </ol>
+        </nav>
+        <h2 class="fw-bold mb-0">Bookmarked Job Openings</h2>
+      </div>
+      <a href="{{ url_for('job_search') }}" class="btn btn-primary-custom">
+        <i class="bi bi-search me-1"></i> Browse More Jobs
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      
+      {% if saved_jobs %}
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="text-muted small">You have saved <span class="fw-bold text-dark">{{ saved_jobs|length }}</span> positions</div>
+        </div>
+
+        <div class="d-flex flex-column gap-3">
+          {% for job in saved_jobs %}
+          <div class="job-card saved-job-item bg-white">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+              <div class="d-flex gap-3 align-items-center">
+                <div class="company-logo-box" style="width: 52px; height: 52px;">
+                  {{ job.company_name[:2] | upper }}
+                </div>
+                <div>
+                  <h5 class="fw-bold mb-1">
+                    <a href="{{ url_for('job_detail', job_id=job.id) }}" class="job-title-link">
+                      {{ job.title }}
+                    </a>
+                  </h5>
+                  <div class="text-muted small fw-medium">
+                    <i class="bi bi-building me-1"></i>{{ job.company_name }}
+                    <span class="mx-2">&bull;</span>
+                    <i class="bi bi-geo-alt me-1"></i>{{ job.location }}
+                    <span class="mx-2">&bull;</span>
+                    <i class="bi bi-calendar3 me-1"></i>Saved {{ job.saved_at[:10] }}
+                  </div>
+                  <div class="d-flex flex-wrap gap-2 mt-2">
+                    <span class="badge-job-type {% if job.job_type == 'Full-Time' %}badge-fulltime{% elif job.job_type == 'Remote' %}badge-remote{% elif job.job_type == 'Part-Time' %}badge-parttime{% else %}badge-contract{% endif %}">
+                      {{ job.job_type }}
+                    </span>
+                    <span class="badge bg-light text-secondary border rounded-pill px-3 py-1 small">
+                      {{ job.category_name }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-danger btn-sm px-3 py-2 btn-save-job" data-job-id="{{ job.id }}" title="Remove Bookmark">
+                  <i class="bi bi-trash3 me-1"></i> Remove
+                </button>
+                <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-primary-custom btn-sm px-4 py-2">
+                  View & Apply
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="bg-white rounded-4 border p-5 text-center my-4">
+          <div class="stat-icon warning mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem;">
+            <i class="bi bi-bookmark"></i>
+          </div>
+          <h4 class="fw-bold mb-2">No Saved Jobs Yet</h4>
+          <p class="text-muted small max-w-500 mx-auto mb-4">
+            Keep track of roles you are interested in by clicking the bookmark button on any job listing card.
+          </p>
+          <a href="{{ url_for('job_search') }}" class="btn btn-primary-custom">
+            Discover Jobs Now
+          </a>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

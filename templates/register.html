@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account - Online Job Portal{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-9">
+
+      <div class="bg-white p-4 p-md-5 rounded-4 border shadow-sm">
+        <div class="text-center mb-4">
+          <div class="navbar-brand-badge mb-2">
+            <i class="bi bi-briefcase-fill"></i>
+            <span>JobPortal</span>
+          </div>
+          <h3 class="fw-bold">Create Your Free Account</h3>
+          <p class="text-muted small">Choose your account type and start connecting</p>
+        </div>
+
+        <form action="{{ url_for('register') }}" method="POST" id="registerForm">
+          <!-- Role Selector -->
+          <div class="row g-2 mb-4">
+            <div class="col-6">
+              <input type="radio" class="btn-check" name="role" id="role_seeker" value="seeker" checked autocomplete="off">
+              <label class="btn btn-outline-primary w-100 py-3 text-center rounded-3 d-flex flex-column align-items-center gap-1" for="role_seeker">
+                <i class="bi bi-person-circle fs-4"></i>
+                <span class="fw-bold">Job Seeker</span>
+                <small style="font-size: 0.72rem;">I want to find a job</small>
+              </label>
+            </div>
+            <div class="col-6">
+              <input type="radio" class="btn-check" name="role" id="role_employer" value="employer" autocomplete="off">
+              <label class="btn btn-outline-primary w-100 py-3 text-center rounded-3 d-flex flex-column align-items-center gap-1" for="role_employer">
+                <i class="bi bi-building-fill fs-4"></i>
+                <span class="fw-bold">Employer</span>
+                <small style="font-size: 0.72rem;">I want to hire talent</small>
+              </label>
+            </div>
+          </div>
+
+          <!-- Common Fields -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold" id="nameLabel">Full Name <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><i class="bi bi-person text-muted"></i></span>
+              <input type="text" name="name" class="form-control" placeholder="e.g. John Doe" required>
+            </div>
+          </div>
+
+          <!-- Employer Only Fields -->
+          <div id="employerFields" style="display: none;">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Company Name <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-buildings text-muted"></i></span>
+                <input type="text" name="company_name" id="company_name_input" class="form-control" placeholder="e.g. Acme Innovations Inc.">
+              </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Industry</label>
+                <input type="text" name="industry" class="form-control" placeholder="e.g. Technology / SaaS">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Headquarters Location</label>
+                <input type="text" name="company_location" class="form-control" placeholder="e.g. San Francisco, CA">
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-7">
+              <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-envelope text-muted"></i></span>
+                <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
+              </div>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label fw-semibold">Phone Number</label>
+              <input type="tel" name="phone" class="form-control" placeholder="+1 (555) 000-0000">
+            </div>
+          </div>
+
+          <div class="row g-2 mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-lock text-muted"></i></span>
+                <input type="password" name="password" class="form-control" placeholder="Min. 6 chars" required minlength="6">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-shield-check text-muted"></i></span>
+                <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required minlength="6">
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary-custom w-100 py-3 mb-3">
+            Register Account
+          </button>
+        </form>
+
+        <div class="text-center mt-3 pt-3 border-top">
+          <span class="text-muted small">Already have an account?</span>
+          <a href="{{ url_for('login') }}" class="fw-bold text-primary text-decoration-none ms-1">Sign In</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const seekerRadio = document.getElementById('role_seeker');
+  const employerRadio = document.getElementById('role_employer');
+  const employerFields = document.getElementById('employerFields');
+  const companyInput = document.getElementById('company_name_input');
+  const nameLabel = document.getElementById('nameLabel');
+
+  function toggleRoleFields() {
+    if (employerRadio.checked) {
+      employerFields.style.display = 'block';
+      companyInput.setAttribute('required', 'required');
+      nameLabel.innerHTML = 'Contact / Recruiter Name <span class="text-danger">*</span>';
+    } else {
+      employerFields.style.display = 'none';
+      companyInput.removeAttribute('required');
+      nameLabel.innerHTML = 'Full Name <span class="text-danger">*</span>';
+    }
+  }
+
+  seekerRadio.addEventListener('change', toggleRoleFields);
+  employerRadio.addEventListener('change', toggleRoleFields);
+</script>
+{% endblock %}

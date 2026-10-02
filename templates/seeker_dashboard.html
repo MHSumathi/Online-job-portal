@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Dashboard - Online Job Portal{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+  <div class="container">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <h2 class="fw-bold mb-1">Welcome back, {{ current_user.name }}!</h2>
+        <div class="text-muted small">
+          <i class="bi bi-briefcase me-1 text-primary"></i>{{ profile.title or 'Job Seeker' }}
+          {% if profile.location %}<span class="mx-2">&bull;</span><i class="bi bi-geo-alt me-1 text-primary"></i>{{ profile.location }}{% endif %}
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('seeker_profile') }}" class="btn btn-outline-custom">
+          <i class="bi bi-pencil-square me-1"></i> Edit Profile
+        </a>
+        <a href="{{ url_for('job_search') }}" class="btn btn-primary-custom">
+          <i class="bi bi-search me-1"></i> Find Jobs
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row g-4">
+    <!-- Sidebar / Profile Card -->
+    <div class="col-lg-4">
+      <div class="d-flex flex-column gap-4">
+        <!-- Profile Card -->
+        <div class="dashboard-sidebar">
+          <div class="text-center pb-3 border-bottom">
+            <div class="rounded-circle bg-primary text-white mx-auto d-flex align-items-center justify-content-center mb-3 shadow-sm" style="width: 72px; height: 72px; font-size: 1.75rem; font-weight: 700;">
+              {{ current_user.name[:1] | upper }}
+            </div>
+            <h5 class="fw-bold mb-1">{{ current_user.name }}</h5>
+            <p class="text-muted small mb-2">{{ profile.title or 'Software Developer' }}</p>
+            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">Candidate</span>
+          </div>
+
+          <!-- Profile completeness bar -->
+          <div class="py-3 border-bottom">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small fw-semibold">Profile Completeness</span>
+              <span class="small fw-bold text-primary">{{ completeness }}%</span>
+            </div>
+            <div class="progress progress-custom">
+              <div class="progress-bar" role="progressbar" style="width: {{ completeness }}%;" aria-valuenow="{{ completeness }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            {% if completeness < 100 %}
+            <small class="text-muted mt-2 d-block" style="font-size: 0.75rem;">Complete your skills, bio & resume to attract 3x more employers.</small>
+            {% endif %}
+          </div>
+
+          <!-- Quick Navigation Links -->
+          <div class="py-2">
+            <a href="{{ url_for('seeker_dashboard') }}" class="dash-nav-item active">
+              <i class="bi bi-speedometer2"></i> Dashboard Overview
+            </a>
+            <a href="{{ url_for('seeker_profile') }}" class="dash-nav-item">
+              <i class="bi bi-person-gear"></i> My Profile & Resume
+            </a>
+            <a href="{{ url_for('saved_jobs') }}" class="dash-nav-item">
+              <i class="bi bi-bookmark"></i> Saved Jobs
+            </a>
+            <a href="{{ url_for('job_search') }}" class="dash-nav-item">
+              <i class="bi bi-briefcase"></i> Explore Job Listings
+            </a>
+          </div>
+
+          <!-- Active Resume Status -->
+          <div class="pt-3 border-top">
+            <label class="small fw-bold text-muted mb-2 text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Attached Resume</label>
+            {% if profile.resume_filename %}
+            <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded-3">
+              <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                <i class="bi bi-file-earmark-pdf text-danger fs-4"></i>
+                <span class="small fw-semibold text-truncate">{{ profile.resume_filename }}</span>
+              </div>
+              <a href="{{ url_for('download_resume', filename=profile.resume_filename) }}" class="btn btn-sm btn-light border" title="Download">
+                <i class="bi bi-download"></i>
+              </a>
+            </div>
+            {% else %}
+            <div class="alert alert-warning py-2 px-3 small mb-0">
+              No resume uploaded. <a href="{{ url_for('seeker_profile') }}" class="alert-link">Upload now</a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Candidate Skills Widget -->
+        {% if profile.skills %}
+        <div class="bg-white p-4 rounded-4 border shadow-sm">
+          <h6 class="fw-bold mb-3"><i class="bi bi-tools text-primary me-2"></i>My Highlighted Skills</h6>
+          <div class="d-flex flex-wrap">
+            {% for skill in profile.skills.split(',') %}
+              <span class="skill-tag mb-1">{{ skill.strip() }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="col-lg-8">
+      <!-- Status Counter Cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-sm-3 col-6">
+          <div class="stat-card p-3">
+            <div class="stat-number fs-3">{{ applications|length }}</div>
+            <div class="stat-label">Total Applied</div>
+          </div>
+        </div>
+        <div class="col-sm-3 col-6">
+          <div class="stat-card p-3">
+            <div class="stat-number fs-3 text-primary">{{ status_counts['Under Review'] + status_counts['Pending'] }}</div>
+            <div class="stat-label">In Review</div>
+          </div>
+        </div>
+        <div class="col-sm-3 col-6">
+          <div class="stat-card p-3">
+            <div class="stat-number fs-3 text-info">{{ status_counts['Shortlisted'] }}</div>
+            <div class="stat-label">Shortlisted</div>
+          </div>
+        </div>
+        <div class="col-sm-3 col-6">
+          <div class="stat-card p-3">
+            <div class="stat-number fs-3 text-success">{{ status_counts['Accepted'] }}</div>
+            <div class="stat-label">Accepted / Hired</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Applications Table -->
+      <div class="bg-white rounded-4 border shadow-sm overflow-hidden mb-4">
+        <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="fw-bold mb-0">My Job Applications</h5>
+            <small class="text-muted">Track all submissions and recruiter decisions in real-time</small>
+          </div>
+          <span class="badge bg-light text-dark border">{{ applications|length }} Records</span>
+        </div>
+
+        {% if applications %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-muted">
+              <tr>
+                <th class="ps-4">Job & Company</th>
+                <th>Category</th>
+                <th>Applied Date</th>
+                <th>Status</th>
+                <th class="pe-4 text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for app in applications %}
+              <tr>
+                <td class="ps-4 py-3">
+                  <div class="fw-bold">
+                    <a href="{{ url_for('job_detail', job_id=app.job_id) }}" class="text-decoration-none text-dark">
+                      {{ app.job_title }}
+                    </a>
+                  </div>
+                  <div class="text-muted small">
+                    <i class="bi bi-building me-1"></i>{{ app.company_name }} &bull; {{ app.job_location }}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge bg-light text-secondary border small">{{ app.category_name }}</span>
+                </td>
+                <td class="small text-muted">
+                  {{ app.applied_at[:10] }}
+                </td>
+                <td>
+                  <span class="badge-status 
+                    {% if app.status == 'Pending' %}badge-status-pending
+                    {% elif app.status == 'Under Review' %}badge-status-review
+                    {% elif app.status == 'Shortlisted' %}badge-status-shortlisted
+                    {% elif app.status == 'Accepted' %}badge-status-accepted
+                    {% else %}badge-status-rejected{% endif %}">
+                    {{ app.status }}
+                  </span>
+                </td>
+                <td class="pe-4 text-end">
+                  <a href="{{ url_for('job_detail', job_id=app.job_id) }}" class="btn btn-sm btn-outline-custom">
+                    Details
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="p-5 text-center">
+          <div class="stat-icon info mx-auto mb-3">
+            <i class="bi bi-folder2-open"></i>
+          </div>
+          <h5 class="fw-bold mb-1">No Applications Submitted Yet</h5>
+          <p class="text-muted small max-w-500 mx-auto mb-3">
+            You haven't applied to any positions yet. Search our job directory and apply to roles fitting your profile!
+          </p>
+          <a href="{{ url_for('job_search') }}" class="btn btn-primary-custom">
+            Browse Openings
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Quick Saved Jobs Section -->
+      {% if saved_jobs %}
+      <div class="bg-white rounded-4 border shadow-sm p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0">Recently Bookmarked Jobs</h5>
+          <a href="{{ url_for('saved_jobs') }}" class="small text-primary text-decoration-none fw-semibold">View All Saved &rarr;</a>
+        </div>
+        <div class="d-flex flex-column gap-3">
+          {% for sj in saved_jobs %}
+          <div class="d-flex justify-content-between align-items-center p-3 rounded-3 border bg-light">
+            <div>
+              <h6 class="fw-bold mb-0">
+                <a href="{{ url_for('job_detail', job_id=sj.id) }}" class="text-dark text-decoration-none">
+                  {{ sj.title }}
+                </a>
+              </h6>
+              <div class="small text-muted">{{ sj.company_name }} &bull; {{ sj.location }} &bull; {{ sj.job_type }}</div>
+            </div>
+            <a href="{{ url_for('job_detail', job_id=sj.id) }}" class="btn btn-sm btn-primary-custom">
+              Apply Now
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

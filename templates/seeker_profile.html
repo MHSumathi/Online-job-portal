@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile & Resume - Online Job Portal{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1 small">
+            <li class="breadcrumb-item"><a href="{{ url_for('seeker_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Profile</li>
+          </ol>
+        </nav>
+        <h2 class="fw-bold mb-0">Candidate Profile & Resume</h2>
+      </div>
+      <a href="{{ url_for('seeker_dashboard') }}" class="btn btn-outline-custom">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      
+      <form action="{{ url_for('seeker_profile') }}" method="POST" enctype="multipart/form-data">
+        
+        <!-- Basic Information Card -->
+        <div class="bg-white p-4 p-md-5 rounded-4 border shadow-sm mb-4">
+          <h5 class="fw-bold mb-4 border-bottom pb-2"><i class="bi bi-person-lines-fill text-primary me-2"></i>Personal & Contact Details</h5>
+          
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+              <input type="text" name="name" value="{{ user.name }}" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Email Address (Read-only)</label>
+              <input type="email" value="{{ user.email }}" class="form-control bg-light" disabled>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Phone Number</label>
+              <input type="tel" name="phone" value="{{ user.phone or '' }}" class="form-control" placeholder="+1 (555) 000-0000">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Current Location / City</label>
+              <input type="text" name="location" value="{{ profile.location or '' }}" class="form-control" placeholder="e.g. Austin, TX or Remote">
+            </div>
+          </div>
+        </div>
+
+        <!-- Professional Background Card -->
+        <div class="bg-white p-4 p-md-5 rounded-4 border shadow-sm mb-4">
+          <h5 class="fw-bold mb-4 border-bottom pb-2"><i class="bi bi-briefcase-fill text-primary me-2"></i>Professional Background</h5>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-8">
+              <label class="form-label fw-semibold">Professional Headline / Role Title</label>
+              <input type="text" name="title" value="{{ profile.title or '' }}" class="form-control" placeholder="e.g. Senior Full-Stack Engineer / UI Designer">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Years of Experience</label>
+              <input type="number" name="experience_years" value="{{ profile.experience_years or 0 }}" class="form-control" min="0" max="50">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Education / Degree</label>
+            <input type="text" name="education" value="{{ profile.education or '' }}" class="form-control" placeholder="e.g. B.S. in Computer Science, University of California">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Core Skills & Technologies</label>
+            <input type="text" name="skills" value="{{ profile.skills or '' }}" class="form-control" placeholder="e.g. Python, Flask, React, Docker, AWS, PostgreSQL (comma separated)">
+            <div class="form-text small">Enter skills separated by commas to help employers match your profile.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Professional Summary / Bio</label>
+            <textarea name="bio" rows="4" class="form-control" placeholder="Write a brief overview of your background, passions, and biggest career accomplishments...">{{ profile.bio or '' }}</textarea>
+          </div>
+        </div>
+
+        <!-- Resume Attachment Card -->
+        <div class="bg-white p-4 p-md-5 rounded-4 border shadow-sm mb-4">
+          <h5 class="fw-bold mb-4 border-bottom pb-2"><i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i>Resume / CV File</h5>
+
+          {% if profile.resume_filename %}
+          <div class="p-3 bg-light rounded-3 d-flex align-items-center justify-content-between mb-3 border">
+            <div class="d-flex align-items-center gap-3">
+              <i class="bi bi-file-earmark-pdf-fill text-danger fs-3"></i>
+              <div>
+                <div class="fw-bold">{{ profile.resume_filename }}</div>
+                <div class="small text-muted">Currently active resume for 1-click applications</div>
+              </div>
+            </div>
+            <a href="{{ url_for('download_resume', filename=profile.resume_filename) }}" class="btn btn-sm btn-outline-custom">
+              <i class="bi bi-download me-1"></i> Download
+            </a>
+          </div>
+          {% endif %}
+
+          <div class="mb-2">
+            <label class="form-label fw-semibold">{% if profile.resume_filename %}Replace Resume File{% else %}Upload Resume (PDF, DOCX){% endif %}</label>
+            <input type="file" name="resume" class="form-control" accept=".pdf,.doc,.docx,.txt">
+            <div class="form-text small">Supported formats: PDF, DOC, DOCX. Max size: 16 MB.</div>
+          </div>
+        </div>
+
+        <!-- Portfolio & Social Links Card -->
+        <div class="bg-white p-4 p-md-5 rounded-4 border shadow-sm mb-4">
+          <h5 class="fw-bold mb-4 border-bottom pb-2"><i class="bi bi-globe text-primary me-2"></i>Portfolio & Social Links</h5>
+
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Portfolio / Website</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-link-45deg"></i></span>
+                <input type="url" name="website" value="{{ profile.website or '' }}" class="form-control" placeholder="https://myportfolio.dev">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">GitHub Profile</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-github"></i></span>
+                <input type="url" name="github" value="{{ profile.github or '' }}" class="form-control" placeholder="https://github.com/username">
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">LinkedIn Profile</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-linkedin text-primary"></i></span>
+                <input type="url" name="linkedin" value="{{ profile.linkedin or '' }}" class="form-control" placeholder="https://linkedin.com/in/username">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="d-flex justify-content-end gap-3">
+          <a href="{{ url_for('seeker_dashboard') }}" class="btn btn-outline-custom px-4 py-2">Cancel</a>
+          <button type="submit" class="btn btn-primary-custom px-5 py-3 fs-6">
+            <i class="bi bi-check-lg me-1"></i> Save Profile Details
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

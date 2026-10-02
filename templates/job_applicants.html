@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Applicants for {{ job.title }} - Online Job Portal{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+  <div class="container">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1 small">
+            <li class="breadcrumb-item"><a href="{{ url_for('employer_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('job_detail', job_id=job.id) }}" class="text-decoration-none">{{ job.title }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Applicants</li>
+          </ol>
+        </nav>
+        <h2 class="fw-bold mb-0">Candidate Applications</h2>
+        <div class="text-muted small">
+          Reviewing submissions for <span class="fw-bold text-dark">{{ job.title }}</span> ({{ applicants|length }} Candidates)
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-outline-custom">
+          <i class="bi bi-box-arrow-up-right me-1"></i> Public Job View
+        </a>
+        <a href="{{ url_for('employer_dashboard') }}" class="btn btn-outline-custom">
+          <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      
+      {% if applicants %}
+        <div class="d-flex flex-column gap-4">
+          {% for app in applicants %}
+          <div class="bg-white rounded-4 border shadow-sm p-4 p-md-5">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 pb-3 border-bottom">
+              <div class="d-flex gap-3 align-items-start">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-4 flex-shrink-0" style="width: 58px; height: 58px;">
+                  {{ app.candidate_name[:1] | upper }}
+                </div>
+                <div>
+                  <h4 class="fw-bold mb-1">{{ app.candidate_name }}</h4>
+                  <div class="text-muted fw-medium small mb-1">
+                    {{ app.candidate_title or 'Job Seeker' }}
+                    {% if app.experience_years %}&bull; <span class="text-dark fw-semibold">{{ app.experience_years }} yrs experience</span>{% endif %}
+                    {% if app.candidate_location %}&bull; <i class="bi bi-geo-alt"></i> {{ app.candidate_location }}{% endif %}
+                  </div>
+                  <div class="d-flex flex-wrap gap-3 small text-muted">
+                    <span><i class="bi bi-envelope text-primary me-1"></i>{{ app.candidate_email }}</span>
+                    {% if app.candidate_phone %}
+                    <span><i class="bi bi-telephone text-primary me-1"></i>{{ app.candidate_phone }}</span>
+                    {% endif %}
+                    {% if app.education %}
+                    <span><i class="bi bi-mortarboard text-primary me-1"></i>{{ app.education }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Current Status Badge -->
+              <div class="text-md-end">
+                <span class="badge-status 
+                  {% if app.status == 'Pending' %}badge-status-pending
+                  {% elif app.status == 'Under Review' %}badge-status-review
+                  {% elif app.status == 'Shortlisted' %}badge-status-shortlisted
+                  {% elif app.status == 'Accepted' %}badge-status-accepted
+                  {% else %}badge-status-rejected{% endif %} fs-6 px-3 py-2">
+                  {{ app.status }}
+                </span>
+                <div class="small text-muted mt-2">Applied on {{ app.applied_at[:10] }}</div>
+              </div>
+            </div>
+
+            <!-- Skills & Portfolio Links -->
+            <div class="py-3 border-bottom">
+              {% if app.candidate_skills %}
+              <div class="mb-3">
+                <label class="small fw-bold text-muted text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Skills & Competencies</label>
+                <div class="d-flex flex-wrap">
+                  {% for s in app.candidate_skills.split(',') %}
+                    <span class="skill-tag">{{ s.strip() }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+
+              <div class="d-flex flex-wrap gap-2">
+                {% if app.resume_filename %}
+                <a href="{{ url_for('download_resume', filename=app.resume_filename) }}" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1">
+                  <i class="bi bi-file-earmark-pdf-fill"></i> Download Candidate Resume
+                </a>
+                {% endif %}
+
+                {% if app.website %}
+                <a href="{{ app.website }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-globe me-1"></i> Portfolio
+                </a>
+                {% endif %}
+
+                {% if app.github %}
+                <a href="{{ app.github }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-github me-1"></i> GitHub
+                </a>
+                {% endif %}
+
+                {% if app.linkedin %}
+                <a href="{{ app.linkedin }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                  <i class="bi bi-linkedin text-primary me-1"></i> LinkedIn
+                </a>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Cover Letter Section -->
+            {% if app.cover_letter %}
+            <div class="py-3 border-bottom">
+              <label class="small fw-bold text-muted text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">Cover Letter / Candidate Pitch</label>
+              <div class="p-3 bg-light rounded-3 small text-secondary" style="white-space: pre-line;">
+                {{ app.cover_letter }}
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Recruiter Actions Form -->
+            <form action="{{ url_for('update_application_status', app_id=app.id) }}" method="POST" class="pt-3">
+              <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                  <label class="form-label small fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Update Stage / Status</label>
+                  <select name="status" class="form-select form-select-sm">
+                    <option value="Pending" {% if app.status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Under Review" {% if app.status == 'Under Review' %}selected{% endif %}>Under Review</option>
+                    <option value="Shortlisted" {% if app.status == 'Shortlisted' %}selected{% endif %}>Shortlisted</option>
+                    <option value="Accepted" {% if app.status == 'Accepted' %}selected{% endif %}>Accepted / Hired</option>
+                    <option value="Rejected" {% if app.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                  </select>
+                </div>
+
+                <div class="col-md-5">
+                  <label class="form-label small fw-bold text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">Internal Recruiter Notes</label>
+                  <input type="text" name="notes" value="{{ app.notes or '' }}" class="form-control form-control-sm" placeholder="e.g. Cleared round 1 technical interview, strong culture fit">
+                </div>
+
+                <div class="col-md-3">
+                  <button type="submit" class="btn btn-primary-custom btn-sm w-100 py-2">
+                    <i class="bi bi-save me-1"></i> Update Status
+                  </button>
+                </div>
+              </div>
+            </form>
+
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="bg-white rounded-4 border p-5 text-center my-4">
+          <div class="stat-icon info mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem;">
+            <i class="bi bi-people"></i>
+          </div>
+          <h4 class="fw-bold mb-2">No Candidates Have Applied Yet</h4>
+          <p class="text-muted small max-w-500 mx-auto mb-4">
+            This job posting is active. Candidates browsing our portal will be able to apply and appear in this queue.
+          </p>
+          <a href="{{ url_for('employer_dashboard') }}" class="btn btn-primary-custom">
+            Back to Dashboard
+          </a>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

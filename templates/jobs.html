@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Explore Jobs - Online Job Portal{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4 mb-4">
+  <div class="container">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1 small">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-decoration-none">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Jobs</li>
+          </ol>
+        </nav>
+        <h2 class="fw-bold mb-0">Browse Job Vacancies</h2>
+      </div>
+
+      <div class="text-muted small">
+        Showing <span class="fw-bold text-dark">{{ total_results }}</span> available jobs
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container pb-5">
+  <div class="row g-4">
+    <!-- Filter Sidebar -->
+    <div class="col-lg-3">
+      <div class="filter-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0"><i class="bi bi-funnel me-2 text-primary"></i>Filters</h5>
+          <a href="{{ url_for('job_search') }}" class="text-danger small text-decoration-none fw-semibold">Reset All</a>
+        </div>
+
+        <form action="{{ url_for('job_search') }}" method="GET" id="filterForm">
+          <!-- Keyword -->
+          <div class="mb-4">
+            <label class="filter-section-title">Keyword</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+              <input type="text" name="q" value="{{ keyword }}" class="form-control border-start-0" placeholder="Title, skills, company...">
+            </div>
+          </div>
+
+          <!-- Category -->
+          <div class="mb-4">
+            <label class="filter-section-title">Category</label>
+            <select name="category" class="form-select">
+              <option value="">All Categories</option>
+              {% for cat in global_categories %}
+              <option value="{{ cat.id }}" {% if selected_category == cat.id %}selected{% endif %}>
+                {{ cat.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Location -->
+          <div class="mb-4">
+            <label class="filter-section-title">Location</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0"><i class="bi bi-geo-alt text-muted"></i></span>
+              <input type="text" name="location" value="{{ selected_location }}" class="form-control border-start-0" placeholder="City or Remote">
+            </div>
+          </div>
+
+          <!-- Job Type -->
+          <div class="mb-4">
+            <label class="filter-section-title">Job Type</label>
+            {% for t in ['Full-Time', 'Remote', 'Part-Time', 'Contract', 'Internship'] %}
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="type" value="{{ t }}" id="type_{{ loop.index }}" {% if selected_type == t %}checked{% endif %}>
+              <label class="form-check-label small fw-medium" for="type_{{ loop.index }}">
+                {{ t }}
+              </label>
+            </div>
+            {% endfor %}
+            {% if selected_type %}
+            <a href="{{ url_for('job_search', q=keyword, category=selected_category, location=selected_location, experience=selected_experience) }}" class="small text-muted text-decoration-none">Clear Job Type</a>
+            {% endif %}
+          </div>
+
+          <!-- Experience Level -->
+          <div class="mb-4">
+            <label class="filter-section-title">Experience Level</label>
+            {% for exp in ['Entry Level', 'Mid Level', 'Senior Level', 'Lead / Executive'] %}
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="experience" value="{{ exp }}" id="exp_{{ loop.index }}" {% if selected_experience == exp %}checked{% endif %}>
+              <label class="form-check-label small fw-medium" for="exp_{{ loop.index }}">
+                {{ exp }}
+              </label>
+            </div>
+            {% endfor %}
+            {% if selected_experience %}
+            <a href="{{ url_for('job_search', q=keyword, category=selected_category, location=selected_location, type=selected_type) }}" class="small text-muted text-decoration-none">Clear Experience</a>
+            {% endif %}
+          </div>
+
+          <button type="submit" class="btn btn-primary-custom w-100 py-2">
+            Apply Filters
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Job Listings Column -->
+    <div class="col-lg-9">
+      <!-- Sort Bar -->
+      <div class="d-flex justify-content-between align-items-center mb-3 bg-white p-3 rounded-3 border">
+        <div class="small text-muted">
+          Showing <span class="fw-bold text-dark">{{ jobs|length }}</span> vacancies
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <label class="small text-muted mb-0 d-none d-sm-inline">Sort by:</label>
+          <select class="form-select form-select-sm w-auto" onchange="location = this.value;">
+            <option value="{{ url_for('job_search', q=keyword, category=selected_category, location=selected_location, type=selected_type, experience=selected_experience, sort='newest') }}" {% if selected_sort == 'newest' %}selected{% endif %}>Newest First</option>
+            <option value="{{ url_for('job_search', q=keyword, category=selected_category, location=selected_location, type=selected_type, experience=selected_experience, sort='highest_salary') }}" {% if selected_sort == 'highest_salary' %}selected{% endif %}>Highest Salary</option>
+            <option value="{{ url_for('job_search', q=keyword, category=selected_category, location=selected_location, type=selected_type, experience=selected_experience, sort='popular') }}" {% if selected_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Job List -->
+      {% if jobs %}
+        <div class="d-flex flex-column gap-3">
+          {% for job in jobs %}
+          <div class="job-card">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+              <div class="d-flex gap-3">
+                <div class="company-logo-box">
+                  {{ job.company_name[:2] | upper }}
+                </div>
+                <div>
+                  <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                    <h5 class="mb-0">
+                      <a href="{{ url_for('job_detail', job_id=job.id) }}" class="job-title-link">
+                        {{ job.title }}
+                      </a>
+                    </h5>
+                    {% if job.id in applied_job_ids %}
+                      <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill small px-2 py-1">
+                        <i class="bi bi-check2-circle me-1"></i>Applied
+                      </span>
+                    {% endif %}
+                  </div>
+                  <div class="text-muted small fw-medium mb-2">
+                    <a href="{{ url_for('company_profile', employer_id=job.employer_id) }}" class="text-muted text-decoration-none fw-semibold">
+                      <i class="bi bi-building me-1 text-primary"></i>{{ job.company_name }}
+                    </a>
+                    <span class="mx-2">&bull;</span>
+                    <i class="bi bi-geo-alt me-1 text-primary"></i>{{ job.location }}
+                    <span class="mx-2">&bull;</span>
+                    <i class="bi bi-calendar3 me-1 text-muted"></i>{{ job.created_at[:10] }}
+                  </div>
+                  <p class="text-muted small mb-3 line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    {{ job.description }}
+                  </p>
+                  <div class="d-flex flex-wrap gap-2">
+                    <span class="badge-job-type {% if job.job_type == 'Full-Time' %}badge-fulltime{% elif job.job_type == 'Remote' %}badge-remote{% elif job.job_type == 'Part-Time' %}badge-parttime{% else %}badge-contract{% endif %}">
+                      {{ job.job_type }}
+                    </span>
+                    <span class="badge bg-light text-secondary border rounded-pill px-3 py-1 small">
+                      {{ job.experience_level }}
+                    </span>
+                    <span class="badge bg-light text-secondary border rounded-pill px-3 py-1 small">
+                      <i class="bi {{ job.category_icon }} me-1"></i>{{ job.category_name }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right Actions & Salary -->
+              <div class="d-flex flex-row flex-md-column justify-content-between align-items-end w-100 w-md-auto gap-3 pt-3 pt-md-0 border-top border-top-md-0">
+                <div class="text-md-end">
+                  <div class="fw-bold text-dark fs-6">
+                    {% if job.salary_min and job.salary_max %}
+                      {{ job.salary_currency }}{{ "{:,}".format(job.salary_min) }} - {{ job.salary_currency }}{{ "{:,}".format(job.salary_max) }}
+                    {% elif job.salary_min %}
+                      From {{ job.salary_currency }}{{ "{:,}".format(job.salary_min) }}
+                    {% else %}
+                      <span class="text-muted small">Competitive</span>
+                    {% endif %}
+                  </div>
+                  <small class="text-muted">per year</small>
+                </div>
+
+                <div class="d-flex gap-2">
+                  {% if current_user and current_user.role == 'seeker' %}
+                  <button class="btn btn-outline-custom btn-save-job p-2 px-3" data-job-id="{{ job.id }}" title="Bookmark Job">
+                    <i class="bi {% if job.id in saved_job_ids %}bi-bookmark-fill text-primary{% else %}bi-bookmark{% endif %}"></i>
+                  </button>
+                  {% endif %}
+                  <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-primary-custom px-3 py-2">
+                    View Role
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-4 border p-5 text-center my-4">
+          <div class="stat-icon warning mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem;">
+            <i class="bi bi-search"></i>
+          </div>
+          <h4 class="fw-bold mb-2">No Matching Jobs Found</h4>
+          <p class="text-muted small max-w-500 mx-auto mb-4">
+            We couldn't find any job postings matching your current search parameters. Try expanding your search terms or clearing specific filters.
+          </p>
+          <a href="{{ url_for('job_search') }}" class="btn btn-primary-custom">
+            Clear All Filters
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Environment variables & secrets
+.env
+
+# SQLite databases (optional - remove if you want to commit jobportal.db)
+# *.db
+
+# IDE files
+.vscode/
+.idea/
